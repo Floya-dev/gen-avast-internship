@@ -19,3 +19,7 @@ urls.txt => URLs to be blocked
 DOCX_QUISHING_SET_1 - FINAL_FORENSIC_PIPELINE_REPORT.csv => CSV for URLs found in DOCX files in SET_1
 
 DOCX_QUISHING_SET_2 - FINAL_REPORT_CLEAN.cxv => CSV for URLs found in DOCX files in SET_2
+
+pdfviewerhandler-pages-dev.zip => Backup of a recent phishing website
+
+webmail-phish/ => Saved phishing website for email login, with telegram bot, unobfuscated
