@@ -1,0 +1,136 @@
+Metadata frequency
+>>> TAG: CreateDate
+12 hits (  1.4%) | 2026:04:06 13:00:40.185Z
+9 hits (  1.1%) | 2025:08:07 16:49:00.443Z
+7 hits (  0.8%) | 2025:10:29 17:48:28.072Z
+7 hits (  0.8%) | 2025:08:08 14:07:02.914Z
+6 hits (  0.7%) | 2025:12:01 08:47:36.461Z
+5 hits (  0.6%) | 2025:08:19 16:30:23.250Z
+5 hits (  0.6%) | 2025:11:26 18:04:20.467Z
+5 hits (  0.6%) | 2025:08:20 17:35:14.975Z
+5 hits (  0.6%) | 2026:03:29 10:23:20.743Z
+5 hits (  0.6%) | 2025:07:22 01:39:16.295Z
+5 hits (  0.6%) | 2025:08:11 19:45:53.469Z
+4 hits (  0.5%) | 2026:04:05 19:40:19.069Z
+4 hits (  0.5%) | 2026:02:23 14:27:45.786Z
+4 hits (  0.5%) | 2026:02:25 14:11:22.683Z
+4 hits (  0.5%) | 2025:08:08 16:48:21.235Z
+
+>>> TAG: Creator
+739 hits ( 86.6%) | html-to-docx
+
+>>> TAG: Description
+739 hits ( 86.6%) |
+
+>>> TAG: ExifToolVersion
+853 hits (100.0%) | 13.5
+
+>>> TAG: FileSize
+109 hits ( 12.8%) | 31 kB
+63 hits (  7.4%) | 29 kB
+56 hits (  6.6%) | 32 kB
+40 hits (  4.7%) | 33 kB
+39 hits (  4.6%) | 15 kB
+33 hits (  3.9%) | 30 kB
+24 hits (  2.8%) | 50 kB
+21 hits (  2.5%) | 28 kB
+21 hits (  2.5%) | 39 kB
+20 hits (  2.3%) | 51 kB
+20 hits (  2.3%) | 40 kB
+16 hits (  1.9%) | 52 kB
+15 hits (  1.8%) | 42 kB
+15 hits (  1.8%) | 56 kB
+15 hits (  1.8%) | 57 kB
+
+>>> TAG: FileType
+852 hits ( 99.9%) | DOCX
+1 hits (  0.1%) | ZIP
+
+>>> TAG: FileTypeExtension
+852 hits ( 99.9%) | docx
+1 hits (  0.1%) | zip
+
+>>> TAG: Keywords
+739 hits ( 86.6%) | html-to-docx
+
+>>> TAG: LastModifiedBy
+739 hits ( 86.6%) | html-to-docx
+
+>>> TAG: MIMEType
+852 hits ( 99.9%) | application/vnd.openxmlformats-officedocument.wordprocessingml.document
+1 hits (  0.1%) | application/zip
+
+>>> TAG: ModifyDate
+12 hits (  1.4%) | 2026:04:06 13:00:40.185Z
+9 hits (  1.1%) | 2025:08:07 16:49:00.443Z
+7 hits (  0.8%) | 2025:10:29 17:48:28.072Z
+7 hits (  0.8%) | 2025:08:08 14:07:02.914Z
+6 hits (  0.7%) | 2025:12:01 08:47:36.461Z
+5 hits (  0.6%) | 2025:08:19 16:30:23.250Z
+5 hits (  0.6%) | 2025:11:26 18:04:20.467Z
+5 hits (  0.6%) | 2025:08:20 17:35:14.975Z
+5 hits (  0.6%) | 2026:03:29 10:23:20.743Z
+5 hits (  0.6%) | 2025:07:22 01:39:16.295Z
+5 hits (  0.6%) | 2025:08:11 19:45:53.469Z
+4 hits (  0.5%) | 2026:04:05 19:40:19.069Z
+4 hits (  0.5%) | 2026:02:23 14:27:45.787Z
+4 hits (  0.5%) | 2026:02:25 14:11:22.683Z
+4 hits (  0.5%) | 2025:08:08 16:48:21.235Z
+
+>>> TAG: RevisionNumber
+739 hits ( 86.6%) | 1
+
+>>> TAG: Subject
+739 hits ( 86.6%) |
+
+>>> TAG: Title
+739 hits ( 86.6%) |
+
+>>> TAG: Warning
+1 hits (  0.1%) | IO error reading ZIP file
+
+>>> TAG: ZipBitFlag
+853 hits (100.0%) | 0
+
+>>> TAG: ZipCRC
+740 hits ( 86.8%) | 0x00000000
+104 hits ( 12.2%) | 0x96762596
+9 hits (  1.1%) | 0xc2f7408f
+
+>>> TAG: ZipCompressedSize
+740 hits ( 86.8%) | 0
+104 hits ( 12.2%) | 465
+9 hits (  1.1%) | 462
+
+>>> TAG: ZipCompression
+853 hits (100.0%) | None
+
+>>> TAG: ZipFileName
+737 hits ( 86.4%) | word/
+113 hits ( 13.2%) | [Content_Types].xml
+3 hits (  0.4%) | _rels/
+
+>>> TAG: ZipModifyDate
+2 hits (  0.2%) | 2025:08:07 17:03:30
+2 hits (  0.2%) | 2025:08:19 20:21:08
+2 hits (  0.2%) | 2025:12:15 23:55:06
+1 hits (  0.1%) | 2026:04:08 08:11:30
+1 hits (  0.1%) | 2025:10:09 20:27:16
+1 hits (  0.1%) | 2025:12:05 12:13:12
+1 hits (  0.1%) | 2025:09:09 20:58:26
+1 hits (  0.1%) | 2025:09:11 19:58:16
+1 hits (  0.1%) | 2025:12:01 10:14:24
+1 hits (  0.1%) | 2025:08:18 00:03:58
+1 hits (  0.1%) | 2025:07:15 15:54:58
+1 hits (  0.1%) | 2026:04:05 22:38:04
+1 hits (  0.1%) | 2025:08:21 18:01:24
+1 hits (  0.1%) | 2025:09:10 21:01:16
+1 hits (  0.1%) | 2025:08:14 18:57:44
+
+>>> TAG: ZipRequiredVersion
+853 hits (100.0%) | 10
+
+>>> TAG: ZipUncompressedSize
+740 hits ( 86.8%) | 0
+104 hits ( 12.2%) | 465
+9 hits (  1.1%) | 462

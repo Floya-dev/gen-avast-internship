@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Viewer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: { mono: ['SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', 'monospace'] }
+    }
+  }
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  * { font-family: 'Inter', system-ui, sans-serif; }
+  .font-mono { font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace !important; }
+  .drop-zone { transition: all .25s ease; }
+  .drop-zone.dragover { transform: scale(1.02); }
+  .card-hover { transition: all .25s ease; }
+  .card-hover:hover { transform: translateY(-3px); }
+  .fade-in { animation: fadeIn .35s ease forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .slide-down { animation: slideDown .3s ease forwards; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-16px) scaleY(.95); } to { opacity: 1; transform: translateY(0) scaleY(1); } }
+  .tree-toggle::before { content: "\25B6"; font-size: 10px; display: inline-block; width: 14px; transition: transform .2s; }
+  .tree-toggle.expanded::before { transform: rotate(90deg); }
+  th { cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 10; }
+  th .sort-arrow { opacity: .3; }
+  th.sorted .sort-arrow { opacity: 1; }
+  pre { white-space: pre-wrap; word-break: break-word; margin: 0; }
+  .toast { transition: all .35s cubic-bezier(.4,0,.2,1); transform: translateY(20px); opacity: 0; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+</style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+
+  <header class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-violet-200 dark:shadow-violet-900/30">{ }</div>
+        <h1 class="text-lg font-bold tracking-tight">JSON <span class="text-indigo-600 dark:text-indigo-400">Viewer</span></h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <div id="statsBar" class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block"></div>
+        <button id="themeToggle" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center transition text-lg">&#9790;</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="dropZone" class="drop-zone mx-4 sm:mx-6 lg:mx-auto mt-16 max-w-2xl p-12 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl text-center cursor-pointer bg-white/50 dark:bg-slate-800/50 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20">
+    <div class="text-6xl mb-4 opacity-30 dark:opacity-40">&#128196;</div>
+    <h2 class="text-xl font-semibold mb-1">Drop your JSON here</h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400">or click to browse &middot; <span class="font-mono text-indigo-600 dark:text-indigo-400 font-medium">.json</span></p>
+    <input type="file" id="fileInput" accept=".json,application/json">
+  </div>
+
+  <div id="mainContainer" class="hidden flex-1">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div id="summaryBar" class="flex flex-wrap gap-3 mb-6"></div>
+
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+        <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+          <button id="newFileBtn" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm hover:shadow transition-all">+ New file</button>
+          <div class="relative flex-1 sm:flex-initial">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="searchBox" placeholder="Filter..." class="w-full sm:w-52 pl-9 pr-3 py-2 text-sm rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-400 dark:focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 outline-none transition">
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="inline-flex rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+            <button data-view="table" class="view-btn active px-3.5 py-2 text-sm font-medium transition">Table</button>
+            <button data-view="cards" class="view-btn px-3.5 py-2 text-sm font-medium transition">Cards</button>
+            <button data-view="tree" class="view-btn px-3.5 py-2 text-sm font-medium transition">Tree</button>
+            <button data-view="raw" class="view-btn px-3.5 py-2 text-sm font-medium transition">Raw</button>
+          </div>
+          <button id="expandAllBtn" class="hidden px-3.5 py-2 text-sm font-medium rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm transition">Expand all</button>
+        </div>
+      </div>
+
+      <div id="contentArea" class="fade-in"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast fixed bottom-6 right-6 px-5 py-3 rounded-xl text-sm font-medium text-white shadow-xl z-[999] pointer-events-none"></div>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const main = document.getElementById('mainContainer');
+const content = document.getElementById('contentArea');
+const summaryBar = document.getElementById('summaryBar');
+const statsBar = document.getElementById('statsBar');
+const searchBox = document.getElementById('searchBox');
+const toast = document.getElementById('toast');
+const expandBtn = document.getElementById('expandAllBtn');
+
+let data = null, view = 'table', query = '', expandAll = false;
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) load(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) load(fileInput.files[0]); });
+
+document.getElementById('newFileBtn').addEventListener('click', () => {
+  main.style.display = 'none'; dropZone.classList.remove('hidden');
+  fileInput.value = ''; data = null;
+  statsBar.textContent = '';
+});
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+  document.documentElement.classList.toggle('dark');
+});
+
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active', 'bg-indigo-50', 'dark:bg-indigo-900/30', 'text-indigo-600', 'dark:text-indigo-400'));
+    btn.classList.add('active', 'bg-indigo-50', 'dark:bg-indigo-900/30', 'text-indigo-600', 'dark:text-indigo-400');
+    view = btn.dataset.view;
+    expandBtn.style.display = view === 'tree' ? 'inline-block' : 'none';
+    render();
+  });
+});
+expandBtn.addEventListener('click', () => {
+  expandAll = !expandAll;
+  expandBtn.textContent = expandAll ? 'Collapse' : 'Expand';
+  render();
+});
+searchBox.addEventListener('input', () => { query = searchBox.value.trim().toLowerCase(); render(); });
+
+function load(file) {
+  if (!file.name.endsWith('.json')) return toastMsg('Please select a .json file', 'bg-red-500');
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      data = JSON.parse(e.target.result);
+      dropZone.classList.add('hidden'); main.style.display = 'block';
+      render();
+    } catch (err) { toastMsg('Invalid JSON: ' + err.message, 'bg-red-500'); }
+  };
+  r.readAsText(file);
+}
+
+function toastMsg(msg, cls) {
+  toast.textContent = msg; toast.className = 'toast fixed bottom-6 right-6 px-5 py-3 rounded-xl text-sm font-medium text-white shadow-xl z-[999] ' + cls;
+  requestAnimationFrame(() => toast.classList.add('show'));
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function render() {
+  if (!data) return;
+  updateStats();
+  if (view === 'table') renderTable();
+  else if (view === 'cards') renderCards();
+  else if (view === 'tree') renderTree();
+  else renderRaw();
+}
+
+function updateStats() {
+  if (Array.isArray(data)) statsBar.innerHTML = '<span class="font-semibold">' + data.length.toLocaleString() + '</span> items';
+  else if (data && typeof data === 'object') {
+    const k = Object.keys(data);
+    let html = '<span class="font-semibold">' + k.length.toLocaleString() + '</span> keys';
+    k.forEach(key => {
+      const v = data[key];
+      if (Array.isArray(v)) html += ' &middot; <span class="font-semibold">' + esc(key) + ':</span> ' + v.length + ' items';
+      else if (typeof v === 'object' && v) html += ' &middot; <span class="font-semibold">' + esc(key) + ':</span> ' + Object.keys(v).length + ' keys';
+    });
+    statsBar.innerHTML = html;
+  } else statsBar.innerHTML = typeof data;
+}
+
+function getSummary(d) {
+  if (!d || typeof d !== 'object') return null;
+  return d.summary || d.meta || d.stats || null;
+}
+
+function computeStats(arr) {
+  if (!Array.isArray(arr) || !arr.length) return null;
+  const nums = arr.map(i => { const v = i.score ?? i.value ?? i.count ?? null; return v != null ? Number(v) : null; }).filter(v => v !== null && !isNaN(v));
+  if (!nums.length) return null;
+  return { total_files: arr.length, average_score: nums.reduce((a,b) => a+b, 0) / nums.length, max_score: Math.max(...nums), min_score: Math.min(...nums) };
+}
+
+function renderSummary(d) {
+  let s = getSummary(d);
+  if (!s && Array.isArray(d)) s = computeStats(d);
+  if (!s) { summaryBar.innerHTML = ''; return; }
+  const items = [];
+  if (s.total_files != null) items.push({ label: 'Files', value: s.total_files, color: 'from-blue-500 to-indigo-600' });
+  if (s.total != null && s.total_files == null) items.push({ label: 'Total', value: s.total, color: 'from-blue-500 to-indigo-600' });
+  if (s.average_score != null) items.push({ label: 'Avg Score', value: Number(s.average_score).toFixed(2), color: 'from-emerald-500 to-teal-600' });
+  if (s.max_score != null) items.push({ label: 'Max Score', value: s.max_score, color: 'from-amber-500 to-orange-600' });
+  if (s.min_score != null) items.push({ label: 'Min Score', value: s.min_score, color: 'from-rose-500 to-pink-600' });
+  if (s.total_words != null) items.push({ label: 'Words', value: s.total_words.toLocaleString(), color: 'from-violet-500 to-purple-600' });
+  if (!items.length) { summaryBar.innerHTML = ''; return; }
+  summaryBar.innerHTML = items.map(i => '<div class="flex items-center gap-3 px-5 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm slide-down"><div class="w-1.5 h-10 rounded-full bg-gradient-to-b ' + i.color + '"></div><div><div class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">' + i.label + '</div><div class="text-xl font-bold">' + i.value + '</div></div></div>').join('');
+}
+
+function renderTable() {
+  if (!Array.isArray(data)) return renderRaw();
+  renderSummary(data);
+  let rows = data;
+  if (query) rows = rows.filter(r => JSON.stringify(r).toLowerCase().includes(query));
+  if (!rows.length) return emptyState();
+
+  const keys = [...new Set(rows.flatMap(Object.keys))];
+  let sortKey = null, sortDir = 1;
+
+  function buildTable(r) {
+    return '<table class="w-full text-sm">' +
+      '<thead>' + keys.map(k => '<th class="px-4 py-3 font-semibold text-left text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700" data-key="' + esc(k) + '">' + esc(k) + ' <span class="sort-arrow inline-block ml-1">&#9650;</span></th>').join('') + '</thead>' +
+      '<tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">' +
+      r.map(item => '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">' +
+        keys.map(k => '<td class="px-4 py-3 text-slate-700 dark:text-slate-300 max-w-xs overflow-x-auto">' + cell(item[k]) + '</td>').join('') +
+      '</tr>').join('') +
+      '</tbody></table>';
+  }
+
+  content.innerHTML = '<div class="rounded-xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"><div class="overflow-x-auto">' + buildTable(rows) + '</div></div>';
+
+  content.querySelectorAll('th').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.key;
+      if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+      content.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
+      th.classList.add('sorted');
+      rows.sort((a, b) => {
+        const va = a[k], vb = b[k];
+        if (va == null && vb == null) return 0;
+        if (va == null) return 1; if (vb == null) return -1;
+        if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * sortDir;
+        return String(va).localeCompare(String(vb)) * sortDir;
+      });
+      const wrap = content.querySelector('.overflow-x-auto');
+      wrap.innerHTML = buildTable(rows);
+      // re-bind sort handlers
+      wrap.querySelectorAll('th').forEach(t => {
+        t.addEventListener('click', () => { t.click(); });
+      });
+    });
+  });
+}
+
+function renderCards() {
+  const items = Array.isArray(data) ? data : [data];
+  renderSummary(data);
+  let filtered = items;
+  if (query) filtered = filtered.filter(r => JSON.stringify(r).toLowerCase().includes(query));
+  if (!filtered.length) return emptyState();
+
+  const keys = [...new Set(filtered.flatMap(Object.keys))];
+  content.innerHTML = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">' +
+    filtered.map(item => '<div class="card-hover rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-5">' +
+      keys.filter(k => k in item).map(k => {
+        const v = item[k]; let val;
+        if (v === null || v === undefined) val = '<span class="text-slate-400 italic">null</span>';
+        else if (typeof v === 'object') val = '<pre class="font-mono text-xs mt-1 p-2 bg-slate-50 dark:bg-slate-900 rounded-lg max-h-24 overflow-y-auto">' + esc(JSON.stringify(v, null, 1)) + '</pre>';
+        else val = '<span class="font-mono text-sm">' + esc(String(v)) + '</span>';
+        return '<div class="mb-2 last:mb-0"><div class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">' + esc(k) + '</div><div class="text-slate-800 dark:text-slate-200">' + val + '</div></div>';
+      }).join('') +
+    '</div>').join('') + '</div>';
+}
+
+function renderTree() {
+  renderSummary(data);
+  content.innerHTML = '<div class="rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-6 overflow-x-auto"><div class="font-mono text-sm" id="treeRoot"></div></div>';
+  buildTree(document.getElementById('treeRoot'), data, '', true);
+}
+
+function buildTree(el, val, key, root) {
+  const d = document.createElement('div');
+  d.className = 'ml-5';
+  if (!root) {
+    const wrap = document.createElement('div');
+    const ks = document.createElement('span'); ks.className = 'text-indigo-600 dark:text-indigo-400 font-semibold'; ks.textContent = JSON.stringify(key) + ': ';
+    wrap.appendChild(ks);
+    d.appendChild(wrap);
+  }
+
+  if (val === null || val === undefined) {
+    const s = document.createElement('span'); s.className = 'text-slate-400 italic'; s.textContent = 'null';
+    (d.firstChild || d).appendChild(s);
+    if (!root) { const c = document.createElement('span'); c.className = 'text-slate-400'; c.textContent = ','; (d.firstChild || d).appendChild(c); }
+    el.appendChild(d); return;
+  }
+  if (typeof val === 'boolean' || typeof val === 'number') {
+    const s = document.createElement('span'); s.className = typeof val === 'boolean' ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'; s.textContent = String(val);
+    (d.firstChild || d).appendChild(s);
+    if (!root) { const c = document.createElement('span'); c.className = 'text-slate-400'; c.textContent = ','; (d.firstChild || d).appendChild(c); }
+    el.appendChild(d); return;
+  }
+  if (typeof val === 'string') {
+    const s = document.createElement('span'); s.className = 'text-emerald-600 dark:text-emerald-400'; s.textContent = JSON.stringify(val);
+    (d.firstChild || d).appendChild(s);
+    if (!root) { const c = document.createElement('span'); c.className = 'text-slate-400'; c.textContent = ','; (d.firstChild || d).appendChild(c); }
+    el.appendChild(d); return;
+  }
+
+  const isArr = Array.isArray(val);
+  const entries = isArr ? val : Object.keys(val);
+  const len = entries.length;
+  const ob = isArr ? '[' : '{', cb = isArr ? ']' : '}';
+  if (!len) {
+    const s = document.createElement('span'); s.className = 'text-slate-400'; s.textContent = ob + cb;
+    (d.firstChild || d).appendChild(s);
+    if (!root) { const c = document.createElement('span'); c.className = 'text-slate-400'; c.textContent = ','; (d.firstChild || d).appendChild(c); }
+    el.appendChild(d); return;
+  }
+
+  const t = document.createElement('span');
+  t.className = 'tree-toggle cursor-pointer' + (expandAll ? ' expanded' : '');
+  const b1 = document.createElement('span'); b1.className = 'text-slate-400'; b1.textContent = ' ' + ob;
+  const b2 = document.createElement('span'); b2.className = 'text-slate-400'; b2.textContent = cb;
+  const cc = document.createElement('div'); cc.className = 'ml-4'; cc.style.display = expandAll ? '' : 'none';
+  if (expandAll) { for (let i = 0; i < len; i++) { const k2 = isArr ? i : entries[i]; buildTree(cc, isArr ? val[i] : val[k2], isArr ? null : k2, false); } }
+  (d.firstChild || d).appendChild(t); (d.firstChild || d).appendChild(b1); (d.firstChild || d).appendChild(b2);
+  d.appendChild(cc);
+  t.addEventListener('click', () => {
+    t.classList.toggle('expanded');
+    const show = t.classList.contains('expanded');
+    cc.style.display = show ? '' : 'none';
+    if (show && !cc.children.length) { for (let i = 0; i < len; i++) { const k2 = isArr ? i : entries[i]; buildTree(cc, isArr ? val[i] : val[k2], isArr ? null : k2, false); } }
+  });
+  el.appendChild(d);
+}
+
+function renderRaw() {
+  summaryBar.innerHTML = '';
+  content.innerHTML = '<div class="rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-6 overflow-x-auto"><pre class="font-mono text-sm leading-6">' + esc(JSON.stringify(data, null, 2)) + '</pre></div>';
+}
+
+function emptyState() {
+  content.innerHTML = '<div class="text-center py-20 text-slate-400"><div class="text-6xl mb-4 opacity-30">&#128269;</div><h3 class="text-lg font-semibold text-slate-500 dark:text-slate-400">No matches</h3><p class="text-sm">Try a different search</p></div>';
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function cell(v) {
+  if (v === null || v === undefined) return '<span class="text-slate-400 italic">null</span>';
+  if (typeof v === 'boolean') return '<span class="text-amber-600 dark:text-amber-400 font-mono">' + v + '</span>';
+  if (typeof v === 'number') return '<span class="text-blue-600 dark:text-blue-400 font-mono font-medium">' + v + '</span>';
+  if (Array.isArray(v) || typeof v === 'object') return '<pre class="font-mono text-xs max-h-20 overflow-y-auto p-1.5 bg-slate-50 dark:bg-slate-900 rounded">' + esc(JSON.stringify(v, null, 1)) + '</pre>';
+  return '<span class="font-mono text-emerald-600 dark:text-emerald-400">"' + esc(String(v)) + '"</span>';
+}
+</script>
+</body>
+</html>
